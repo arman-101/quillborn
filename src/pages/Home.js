@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import './Home.css';
 import missingCover from '../images/missing book cover.png'; // Import the missing cover image
+import favicon from '../images/favicon64.png'; // Import the favicon image
 
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,8 +51,13 @@ const Home = () => {
 
   return (
     <Container className="home-container text-center">
-      <h1 className="welcome-text">QuillBorn</h1>
-      <p className="subtitle">Bound by Quill, Unbound by Imagination</p>
+      <div className="header">
+        <a href="/" className="header-link">
+          <img src={favicon} alt="QuillBorn" className="header-icon" />
+          <h1 className="welcome-text">QuillBorn</h1>
+        </a>
+        <p className="subtitle">Bound by Quill, Unbound by Imagination</p>
+      </div>
 
       <Form onSubmit={handleSearch} className="search-bar">
         <Form.Group controlId="searchTerm">

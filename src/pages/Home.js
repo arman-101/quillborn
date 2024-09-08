@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Form, Button, ListGroup, ListGroupItem, Dropdown, DropdownButton } from 'react-bootstrap';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Form, Button, ListGroup, ListGroupItem, Dropdown, DropdownButton, DropdownMenu, DropdownItem } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import './Home.css';
@@ -9,8 +9,11 @@ import favicon from '../images/favicon64.png'; // Import the favicon image
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [books, setBooks] = useState([]);
+  const [preview, setPreview] = useState([]);
   const { query } = useParams();
   const navigate = useNavigate();
+  const searchInputRef = useRef(null);
+  const previewRef = useRef(null);
 
   useEffect(() => {
     if (query) {
@@ -18,6 +21,20 @@ const Home = () => {
       fetchBooks(query);
     }
   }, [query]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchInputRef.current && !searchInputRef.current.contains(event.target) &&
+          previewRef.current && !previewRef.current.contains(event.target)) {
+        setPreview([]);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -28,6 +45,7 @@ const Home = () => {
     try {
       const res = await axios.get(`https://www.googleapis.com/books/v1/volumes?q=${term}&maxResults=40&key=AIzaSyB7XTni6Gw4b1PCqp-qobu4YX83rDBKPM0`);
       setBooks(res.data.items || []);
+      setPreview(res.data.items.slice(0, 5) || []);
     } catch (error) {
       console.error("Error fetching books:", error);
     }
@@ -60,16 +78,43 @@ const Home = () => {
       </div>
 
       <Form onSubmit={handleSearch} className="search-bar">
-        <Form.Group controlId="searchTerm">
+        <Form.Group controlId="searchTerm" ref={searchInputRef}>
           <Form.Control
             type="text"
             placeholder="Search for books..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              fetchBooks(e.target.value);
+            }}
             className="search-input"
           />
         </Form.Group>
         <Button variant="primary" type="submit" className="search-button">Search</Button>
+        <div className="search-preview-container" ref={previewRef}>
+          {preview.length > 0 && (
+            <DropdownMenu className="search-preview-dropdown">
+              {preview.map((book, index) => (
+                <DropdownItem key={index} className="search-preview-item">
+                  <img 
+                    src={book.volumeInfo?.imageLinks?.smallThumbnail || missingCover} 
+                    alt={book.volumeInfo?.title} 
+                    className="preview-book-cover" 
+                  />
+                  <div className="preview-book-info">
+                    <h5 className="preview-book-title">{book.volumeInfo?.title}</h5>
+                    <p className="preview-book-author">{book.volumeInfo?.authors?.join(", ") || 'Unknown'}</p>
+                  </div>
+                </DropdownItem>
+              ))}
+              {preview.length > 0 && (
+                <Dropdown.Item as="button" className="show-all-results" onClick={() => navigate(`/search/${searchTerm}`)}>
+                  Show ALL Results...
+                </Dropdown.Item>
+              )}
+            </DropdownMenu>
+          )}
+        </div>
       </Form>
 
       <ListGroup className="book-list">

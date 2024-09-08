@@ -36,3 +36,18 @@
     transform: rotate(360deg);
   }
 }
+
+/* Ensure the app takes the full height of the viewport */
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Full viewport height */
+}
+
+.content-wrap {
+  flex: 1; /* This allows the content to grow and push the footer to the bottom */
+}
+
+footer {
+  margin-top: auto; /* Ensure the footer is pushed to the bottom */
+}
